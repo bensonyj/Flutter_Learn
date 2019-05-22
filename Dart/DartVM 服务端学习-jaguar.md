@@ -1,0 +1,32 @@
+## DartVM 服务端学习-jaguar
+
+参照简书内容：[原文链接](<https://www.jianshu.com/p/32e2dcf5f391>)
+
+总而言之Dart服务端开发还不是很成熟。
+
+- [DartVM服务器开发（第一天）--Hello World!](https://www.jianshu.com/p/c01c6e145373)
+- [DartVM服务器开发（第二天）--处理请求](https://www.jianshu.com/p/fd58dfa6a361)
+- [DartVM服务器开发（第三天）--pub管理器、返回html页面](https://www.jianshu.com/p/9e347a901ed9)
+- [DartVM服务器开发（第四天）--代码优化](https://www.jianshu.com/p/2ca96f92efb6)
+- [DartVM服务器开发（第五天）--日志工具](https://www.jianshu.com/p/b7cdf11f32f6)
+- [DartVM服务器开发（第六天）--利用注解处理请求](https://www.jianshu.com/p/59f6c00b9f4e)
+- [DartVM服务器开发（第七天）--WebSocket](https://www.jianshu.com/p/8f4ddf22e300)
+- [DartVM服务器开发（第八天）--http服务端框架](https://www.jianshu.com/p/b3d1ca6a40b0)
+- [DartVM服务器开发（第九天）--Aqueduct环境搭建](https://www.jianshu.com/p/a23185fa923e)
+- [DartVM服务器开发（第十天）--Jaguar环境搭建](https://www.jianshu.com/p/201bb055159f)
+- [DartVM服务器开发（第十一天）--Jaguar处理请求](https://www.jianshu.com/p/fc3d422643c8)
+- [DartVM服务器开发（第十二天）--Jaguar获取请求内容](https://www.jianshu.com/p/5c496ffe6e34)
+- [DartVM服务器开发（第十三天）--Jaguar使用ORM](https://www.jianshu.com/p/ea12b360aca1)
+- [DartVM服务器开发（第十四天）--Jaguar_ORM增删查改](https://www.jianshu.com/p/3c627d71005b)
+- [DartVM服务器开发（第十五天）--Jaguar_ORM一对一](https://www.jianshu.com/p/b48053df033d)
+- [DartVM服务器开发（第十六天）--Jaguar使用JWT](https://www.jianshu.com/p/9c48fc986ffd)
+- [DartVM服务器开发（第十七天）--Jaguar_websocket结合Flutter搭建简单聊天室](https://www.jianshu.com/p/2e0fe04c736d)
+- [DartVM服务器开发（第十八天）--项目部署到云服务器](https://www.jianshu.com/p/2d9eaa5f9e9a)
+- [DartVM服务器开发（第十九天）--jaguar_reflect使用Controller](https://www.jianshu.com/p/2fb427c7329e)
+- [DartVM服务器开发（第二十天）--jaguar配置HTTPS](https://www.jianshu.com/p/b1e0efe0daf5)
+- [DartVM服务器开发（第二十一天）--Dart中的Gson(jaguar_serializer)](https://www.jianshu.com/p/fd0d576c06dc)
+- [DartVM服务器开发（第二十二天）--RestfulApi封装](https://www.jianshu.com/p/f74a616437d6)
+- [DartVM服务器开发（第二十三天）--缓存层(jaguar_cache)](https://www.jianshu.com/p/fab791e92c00)
+- [DartVM服务器开发（第二十四天）--用户验证(jaguar_session_jwt)](https://www.jianshu.com/p/cb8b3e2148be)
+- [DartVM服务器开发（第二十五天）--使用SQl语句](https://www.jianshu.com/p/d6a7575e4974)
+- [DartVM服务器开发（第二十七天）--热重载（解密热重载）](https://www.jianshu.com/p/9567f798a353)
