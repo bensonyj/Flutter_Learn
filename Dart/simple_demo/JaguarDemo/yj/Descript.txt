@@ -1,0 +1,223 @@
+起凡
+
+#### 签到
+
+URL: http://qxact.7fgame.com/H5sign/Request/H5UserSign
+
+method：POST
+
+content-type: application/json; charset=utf-8 , form-data
+
+| 入参 |      |
+| ---- | ---- |
+| u    | ST   |
+
+返回
+
+code ： 1
+
+
+
+#### App 专属礼包
+
+URL：http://api.qxhz.7fgame.com:8380/APPMobileQFInterface/
+
+method: POST
+
+content-type: text/plain; charset=utf-8,x-www-form-urlencoded
+
+入参：
+
+ST：AQAAAG5XZwcAAAAAAAAAAK5xAUo6l+vbO5ZdcJoxlbQpqzBJ6itJfaXWdMGLw5KC7eQce6vRN3TtyHtLzVwLqjO9Qhl/TJeA9MEc4MRQoaYzvUIZf0yXgPTBHODEUKGmDMf31iJvnzBo9dOgMaueLTO9Qhl/TJeA9MEc4MRQoaYzvUIZf0yXgPTBHODEUKGmAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+
+command：dailyhb
+
+srv_id：30010
+
+uid：124213102
+
+userName：eQBzAHcAbwByAGQAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+
+返回：
+
+{"code":0,"msg":"成功","content":{"code":1,"data":[{"Amount":20,"AwardAmount":0,"AwardClassName":"QfGame.RichMan.Award.AwardInfo.ItemAwardInfo, QfGame.RichMan.Award, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null","AwardConfigId":566,"AwardId":242944,"AwardImage":"达人虎符","AwardImageUrl":"","AwardName":"达人虎符","AwardType":1,"DetailId":1970,"DetailName":"全发","EventId":408,"EventName":"手机app每日礼包","EventObjectId":0,"PackageId":3,"Unit":""},{"Amount":25,"AwardAmount":0,"AwardClassName":"QfGame.RichMan.Award.AwardInfo.ItemAwardInfo, QfGame.RichMan.Award, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null","AwardConfigId":566,"AwardId":228904,"AwardImage":"时间金币","AwardImageUrl":"","AwardName":"时间金币","AwardType":1,"DetailId":1970,"DetailName":"全发","EventId":408,"EventName":"手机app每日礼包","EventObjectId":0,"PackageId":3,"Unit":""}],"message":"领取成功"}}
+
+
+
+#### 登录
+
+URL：http://api.qxhz.7fgame.com:8380/APPMobileQFInterface/
+
+method: POST
+
+content-type: text/plain; charset=utf-8
+
+入参：
+
+ST：AQAAACDbZgcAAAAAAAAAAO2TYFcaFQDpIGrXOFWBxOksCpg6KzyozIOFlP9CzG0V7eQce6vRN3TtyHtLzVwLqjO9Qhl/TJeA9MEc4MRQoaYzvUIZf0yXgPTBHODEUKGmNfvnIxVHywuZykCUr8xpvzO9Qhl/TJeA9MEc4MRQoaYzvUIZf0yXgPTBHODEUKGmAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+
+command：GetUserLoginInfo
+
+srv_id：30010
+
+uid：124181280
+
+userName：egBzAHcAbwByAGQAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+
+kind: 0
+
+platform: 2
+
+devid:1521379874B3OP48GDORJ32ZOCZP24XR1FJ4U1YO
+
+devinfo:地点不详,iPhone6,iOS11.3
+
+返回：
+
+{
+	"code": 0,
+	"msg": "成功",
+	"content": {
+		"baseInfo": {
+			"AccountID": 0,
+			"UserId": 124181280,
+			"UserName": "zsword",
+			"UserImage": "http://api.qxhz.7fgame.com:8380/headimage/7F/0_1.bmp",
+			"NickName": "",
+			"ImageID": 0,
+			"Mobile": "18768143214",
+			"IsBindMobile": true,
+			"SaferFlag": 576
+		},
+		"appInfo": {
+			"userid": 124181280,
+			"userImage": "http://api.qxhz.7fgame.com:8380/headimage/7F/0_1.bmp",
+			"platform": 2,
+			"YZSign": ""
+		},
+		"tongBao": {
+			"code": 1101,
+			"msg": "没有通宝信息",
+			"balance": 0,
+			"type": 2
+		},
+		"tale": {
+			"code": 1101,
+			"msg": "没有银两信息",
+			"balance": 0,
+			"type": 50
+		},
+		"points": {
+			"code": 1101,
+			"msg": "没有积分信息",
+			"balance": 0,
+			"type": 38
+		},
+		"yu": {
+			"code": 0,
+			"msg": "",
+			"balance": 0,
+			"type": 0
+		},
+		"copper": {
+			"code": 0,
+			"msg": "",
+			"balance": 0,
+			"type": 0
+		},
+		"vip7F": {
+			"code": 0,
+			"msg": "成功",
+			"type": 4,
+			"level": 0,
+			"expireTime": 1513075682
+		},
+		"vip11": {
+			"code": 0,
+			"msg": "",
+			"type": 0,
+			"level": 0,
+			"expireTime": 0
+		},
+		"vipSG2": {
+			"code": 0,
+			"msg": "",
+			"type": 0,
+			"level": 0,
+			"expireTime": 0
+		},
+		"roleInfo": {
+			"code": 1101,
+			"msg": "未绑定三国争霸2角色",
+			"count": 0,
+			"uid": 0,
+			"roles": null
+		},
+		"VIPInfo": {
+			"VIP_7F": 0,
+			"VIP_11": 0,
+			"VIP_SG2": 0
+		},
+		"qxGold": {
+			"code": 0,
+			"msg": "",
+			"balance": 0,
+			"type": 0
+		},
+		"qxHunYu": {
+			"code": 0,
+			"msg": "",
+			"balance": 0,
+			"type": 0
+		},
+		"imip": "182.254.145.128",
+		"coins": {
+			"ResCode": 0,
+			"Infos": [{
+				"Amount": 106,
+				"ItemTypeId": 106218
+			}],
+			"tongbao": 0
+		}
+	}
+}
+
+
+
+#### 当前虎符
+
+URL：http://api.qxhz.7fgame.com:8380/APPMobileQFInterface/
+
+method: POST
+
+content-type: text/plain; charset=utf-8
+
+入参：
+
+ST：
+
+command：coins
+
+srv_id：30010
+
+id：124181280
+
+userName：eQBzAHcAbwByAGQAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+
+返回：
+
+{
+	"code": 0,
+	"msg": "成功",
+	"content": {
+		"ResCode": 0,
+		"Infos": [{
+			"Amount": 106,
+			"ItemTypeId": 106218
+		}],
+		"tongbao": 0
+	}
+}
+
+
+
