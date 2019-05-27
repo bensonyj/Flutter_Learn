@@ -292,6 +292,92 @@ void main() {
 
 #### Material widget
 
+##### CheckBox
+
+#####Switch
+
+##### TextField
+
+```dart
+const TextField({
+  ...
+  TextEditingController controller, 
+  FocusNode focusNode,
+  InputDecoration decoration = const InputDecoration(),
+  TextInputType keyboardType,
+  TextInputAction textInputAction,
+  TextStyle style,
+  TextAlign textAlign = TextAlign.start,
+  bool autofocus = false,
+  bool obscureText = false,
+  int maxLines = 1,
+  int maxLength,
+  bool maxLengthEnforced = true,
+  ValueChanged<String> onChanged,
+  VoidCallback onEditingComplete,
+  ValueChanged<String> onSubmitted,
+  List<TextInputFormatter> inputFormatters,
+  bool enabled,
+  this.cursorWidth = 2.0,
+  this.cursorRadius,
+  this.cursorColor,
+  ...
+})
+```
+
+- controller：编辑框的控制器，通过它可以设置/获取编辑框的内容、选择编辑内容、监听编辑文本改变事件。大多数情况下我们都需要显式提供一个controller来与文本框交互。如果没有提供controller，则TextField内部会自动创建一个。
+
+- focusNode：用于控制TextField是否占有当前键盘的输入焦点。它是我们和键盘交互的一个handle。
+
+- InputDecoration：用于控制TextField的外观显示，如提示文本、背景颜色、边框等。
+
+- keyboardType：用于设置该输入框默认的键盘输入类型，取值如下：
+
+  | TextInputType枚举值 | 含义                                                |
+  | ------------------- | --------------------------------------------------- |
+  | text                | 文本输入键盘                                        |
+  | multiline           | 多行文本，需和maxLines配合使用(设为null或大于1)     |
+  | number              | 数字；会弹出数字键盘                                |
+  | phone               | 优化后的电话号码输入键盘；会弹出数字键盘并显示"* #" |
+  | datetime            | 优化后的日期输入键盘；Android上会显示“: -”          |
+  | emailAddress        | 优化后的电子邮件地址；会显示“@ .”                   |
+  | url                 | 优化后的url输入键盘； 会显示“/ .”                   |
+
+- textInputAction：键盘动作按钮图标(即回车键位图标)，它是一个枚举值，有多个可选值，全部的取值列表读者可以查看API文档，下面是当值为`TextInputAction.search`时，原生Android系统下键盘样式：
+
+- style：正在编辑的文本样式。
+
+- textAlign: 输入框内编辑文本在水平方向的对齐方式。
+
+- autofocus: 是否自动获取焦点。
+
+- obscureText：是否隐藏正在编辑的文本，如用于输入密码的场景等，文本内容会用“•”替换。
+
+- maxLines：输入框的最大行数，默认为1；如果为`null`，则无行数限制。
+
+- maxLength和maxLengthEnforced ：maxLength代表输入框文本的最大长度，设置后输入框右下角会显示输入的文本计数。maxLengthEnforced决定当输入文本长度超过maxLength时是否阻止输入，为true时会阻止输入，为false时不会阻止输入但输入框会变红。
+
+- onChange：输入框内容改变时的回调函数；注：内容改变事件也可以通过controller来监听。
+
+- onEditingComplete和onSubmitted：这两个回调都是在输入框输入完成时触发，比如按了键盘的完成键（对号图标）或搜索键（🔍图标）。不同的是两个回调签名不同，onSubmitted回调是`ValueChanged<String>`类型，它接收当前输入内容做为参数，而onEditingComplete不接收参数。
+
+- inputFormatters：用于指定输入格式；当用户输入内容改变时，会根据指定的格式来校验。
+
+- enable：如果为`false`，则输入框会被禁用，禁用状态不接收输入和事件，同时显示禁用态样式（在其decoration中定义）。
+
+- cursorWidth、cursorRadius和cursorColor：这三个属性是用于自定义输入框光标宽度、圆角和颜色的。
+
+##### 表单Form
+
+```dart
+Form({
+  @required Widget child,
+  bool autovalidate = false,
+  WillPopCallback onWillPop,
+  VoidCallback onChanged,
+})
+```
+
 
 
 #### Cupertino widget
@@ -414,9 +500,248 @@ const FlatButton({
 
 通过Image来加载并显示图片，Image的数据源可以是asset、文件、内存以及网络
 
+#### ImageProvider
 
+`ImageProvider` 是一个抽象类，主要定义了图片数据获取的接口`load()`，从不同的数据源获取图片需要实现不同的`ImageProvider`
 
+#### Image
 
+`Image` widget有一个必选的`image`参数，它对应一个ImageProvider
 
+##### 从asset中加载图片
 
+```dart
+Image(
+  image: AssetImage("images/avatar.png"),
+  width: 100.0
+);
+// or
+Image.asset("images/avatar.png",
+  width: 100.0,
+)
+```
+
+##### 从网络加载图片
+
+```dart
+Image(
+  image: NetworkImage(
+      "https://avatars2.githubusercontent.com/u/20411648?s=460&v=4"),
+  width: 100.0,
+)
+// or
+Image.network(
+  "https://avatars2.githubusercontent.com/u/20411648?s=460&v=4",
+  width: 100.0,
+)
+```
+
+#### Image 参数
+
+```dart
+const Image({
+  ...
+  this.width, //图片的宽
+  this.height, //图片高度
+  this.color, //图片的混合色值
+  this.colorBlendMode, //混合模式
+  this.fit,//缩放模式
+  this.alignment = Alignment.center, //对齐方式
+  this.repeat = ImageRepeat.noRepeat, //重复方式
+  ...
+})
+```
+
+- `width`、`height`：用于设置图片的宽、高，当不指定宽高时，图片会根据当前父容器的限制，尽可能的显示其原始大小，如果只设置`width`、`height`的其中一个，那么另一个属性默认会按比例缩放，但可以通过下面介绍的`fit`属性来指定适应规则。
+
+- `fit`：该属性用于在图片的显示空间和图片本身大小不同时指定图片的适应模式。适应模式是在`BoxFit`中定义，它是一个枚举类型，有如下值：
+
+  - `fill`：会拉伸填充满显示空间，图片本身长宽比会发生变化，图片会变形。
+  - `cover`：会按图片的长宽比放大后居中填满显示空间，图片不会变形，超出显示空间部分会被剪裁。
+  - `contain`：这是图片的默认适应规则，图片会在保证图片本身长宽比不变的情况下缩放以适应当前显示空间，图片不会变形。
+  - `fitWidth`：图片的宽度会缩放到显示空间的宽度，高度会按比例缩放，然后居中显示，图片不会变形，超出显示空间部分会被剪裁。
+  - `fitHeight`：图片的高度会缩放到显示空间的高度，宽度会按比例缩放，然后居中显示，图片不会变形，超出显示空间部分会被剪裁。
+  - `none`：图片没有适应策略，会在显示空间内显示图片，如果图片比显示空间大，则显示空间只会显示图片中间部分
+
+- `color`和 `colorBlendMode`：在图片绘制时可以对每一个像素进行颜色混合处理，`color`指定混合色，而`colorBlendMode`指定混合模式，下面是一个简单的示例：
+
+  ```dart
+  Image(
+    image: AssetImage("images/avatar.png"),
+    width: 100.0,
+    color: Colors.blue,
+    colorBlendMode: BlendMode.difference,
+  );
+  ```
+
+- `repeat`：当图片本身大小小于显示空间时，指定图片的重复规则。简单示例如下：
+
+  ```dart
+  Image(
+    image: AssetImage("images/avatar.png"),
+    width: 100.0,
+    height: 200.0,
+    repeat: ImageRepeat.repeatY ,
+  )
+  ```
+
+#### Icon
+
+可以像web开发一样使用iconfont，iconfont即“字体图标”，它是将图标做成字体文件，然后通过指定不同的字符而显示不同的图片
+
+在Flutter开发中，iconfont和图片相比有如下优势：
+
+1. 体积小：可以减小安装包大小。
+2. 矢量的：iconfont都是矢量图标，放大不会影响其清晰度。
+3. 可以应用文本样式：可以像文本一样改变字体图标的颜色、大小对齐等。
+4. 可以通过TextSpan和文本混用。
+
+## 布局类Widgets
+
+布局类Widget都会包含一个或多个子widget，不同的布局类Widget对子widget排版(layout)方式不同。我们在前面说过Element树才是最终的绘制树，Element树是通过widget树来创建的（通过`Widget.createElement()`），widget其实就是Element的配置数据。Flutter中，根据Widget是否需要包含子节点将Widget分为了三类，分别对应三种Element，如下表：
+
+| Widget                        | 对应的Element                  | 用途                                                         |
+| ----------------------------- | ------------------------------ | ------------------------------------------------------------ |
+| LeafRenderObjectWidget        | LeafRenderObjectElement        | Widget树的叶子节点，用于没有子节点的widget，通常基础widget都属于这一类，如Text、Image。 |
+| SingleChildRenderObjectWidget | SingleChildRenderObjectElement | 包含一个子Widget，如：ConstrainedBox、DecoratedBox等         |
+| MultiChildRenderObjectWidget  | MultiChildRenderObjectElement  | 包含多个子Widget，一般都有一个children参数，接受一个Widget数组。如Row、Column、Stack等 |
+
+### 线性布局Row、Column
+
+#### 主轴和纵轴
+
+如果布局是沿水平方向，那么主轴就是指水平方向，而纵轴即垂直方向；如果布局沿垂直方向，那么主轴就是指垂直方向，而纵轴就是水平方向。在线性布局中，有两个定义对齐方式的枚举类MainAxisAlignment和CrossAxisAlignment，分别代表主轴对齐和纵轴对齐
+
+#### Row
+
+Row可以在水平方向排列其子widget
+
+```dart
+Row({
+  ...  
+  TextDirection textDirection,    
+  MainAxisSize mainAxisSize = MainAxisSize.max,    
+  MainAxisAlignment mainAxisAlignment = MainAxisAlignment.start,
+  VerticalDirection verticalDirection = VerticalDirection.down,  
+  CrossAxisAlignment crossAxisAlignment = CrossAxisAlignment.center,
+  List<Widget> children = const <Widget>[],
+})
+```
+
+- textDirection：表示水平方向子widget的布局顺序(是从左往右还是从右往左)，默认为系统当前Locale环境的文本方向(如中文、英语都是从左往右，而阿拉伯语是从右往左)。
+- mainAxisSize：表示Row在主轴(水平)方向占用的空间，默认是`MainAxisSize.max`，表示尽可能多的占用水平方向的空间，此时无论子widgets实际占用多少水平空间，Row的宽度始终等于水平方向的最大宽度；而`MainAxisSize.min`表示尽可能少的占用水平空间，当子widgets没有占满水平剩余空间，则Row的实际宽度等于所有子widgets占用的的水平空间；
+- mainAxisAlignment：表示子Widgets在Row所占用的水平空间内对齐方式，如果mainAxisSize值为`MainAxisSize.min`，则此属性无意义，因为子widgets的宽度等于Row的宽度。只有当mainAxisSize的值为`MainAxisSize.max`时，此属性才有意义，`MainAxisAlignment.start`表示沿textDirection的初始方向对齐，如textDirection取值为`TextDirection.ltr`时，则`MainAxisAlignment.start`表示左对齐，textDirection取值为`TextDirection.rtl`时表示从右对齐。而`MainAxisAlignment.end`和`MainAxisAlignment.start`正好相反；`MainAxisAlignment.center`表示居中对齐。读者可以这么理解：textDirection是mainAxisAlignment的参考系。
+- verticalDirection：表示Row纵轴（垂直）的对齐方向，默认是`VerticalDirection.down`，表示从上到下。
+- crossAxisAlignment：表示子Widgets在纵轴方向的对齐方式，Row的高度等于子Widgets中最高的子元素高度，它的取值和MainAxisAlignment一样(包含`start`、`end`、 `center`三个值)，不同的是crossAxisAlignment的参考系是verticalDirection，即verticalDirection值为`VerticalDirection.down`时`crossAxisAlignment.start`指顶部对齐，verticalDirection值为`VerticalDirection.up`时，`crossAxisAlignment.start`指底部对齐；而`crossAxisAlignment.end`和`crossAxisAlignment.start`正好相反；
+- children ：子Widgets数组。
+
+#### Column
+
+Column可以在垂直方向排列其子widget。参数和Row一样，不同的是布局方向为垂直，主轴纵轴正好相反，读者可类比Row来理解
+
+###弹性布局Flex
+
+弹性布局允许子widget按照一定比例来分配父容器空间，Flutter中的弹性布局主要通过Flex和Expanded来配合实现
+
+#### Flex
+
+Flex可以沿着水平或垂直方向排列子widget，如果你知道主轴方向，使用Row或Column会方便一些，因为Row和Column都继承自Flex，参数基本相同，所以能使用Flex的地方一定可以使用Row或Column
+
+```dart
+Flex({
+  ...
+  @required this.direction, //弹性布局的方向, Row默认为水平方向，Column默认为垂直方向
+  List<Widget> children = const <Widget>[],
+})
+```
+
+Flex继承自MultiChildRenderObjectWidget，对应的RenderObject为RenderFlex，RenderFlex中实现了其布局算法。
+
+#### Expanded
+
+可以按比例“扩伸”Row、Column和Flex子widget所占用的空间。
+
+```dart
+const Expanded({
+  int flex = 1, 
+  @required Widget child,
+})
+```
+
+flex为弹性系数，如果为0或null，则child是没有弹性的，即不会被扩伸占用的空间。如果大于0，所有的Expanded按照其flex的比例来分割主轴的全部空闲空间
+
+### 流失布局Wrap、Flow
+
+#### Wrap
+
+```dart
+Wrap({
+  ...
+  this.direction = Axis.horizontal,
+  this.alignment = WrapAlignment.start,
+  this.spacing = 0.0,
+  this.runAlignment = WrapAlignment.start,
+  this.runSpacing = 0.0,
+  this.crossAxisAlignment = WrapCrossAlignment.start,
+  this.textDirection,
+  this.verticalDirection = VerticalDirection.down,
+  List<Widget> children = const <Widget>[],
+})
+```
+
+我们可以看到Wrap的很多属性在Row（包括Flex和Column）中也有，如direction、crossAxisAlignment、textDirection、verticalDirection等，这些参数意义是相同的，我们不再重复介绍，读者可以查阅前面介绍Row的部分。读者可以认为Wrap和Flex（包括Row和Column）除了超出显示范围后Wrap会折行外，其它行为基本相同。下面我们看一下Wrap特有的几个属性：
+
+- spacing：主轴方向子widget的间距
+- runSpacing：纵轴方向的间距
+- runAlignment：纵轴方向的对齐方式
+
+#### Flow
+
+我们一般很少会使用Flow，因为其过于复杂，需要自己实现子widget的位置转换，在很多场景下首先要考虑的是Wrap是否满足需求。Flow主要用于一些需要自定义布局策略或性能要求较高(如动画中)的场景。Flow有如下优点：
+
+- 性能好；Flow是一个对child尺寸以及位置调整非常高效的控件，Flow用转换矩阵（transformation matrices）在对child进行位置调整的时候进行了优化：在Flow定位过后，如果child的尺寸或者位置发生了变化，在FlowDelegate中的`paintChildren()`方法中调用`context.paintChild` 进行重绘，而`context.paintChild`在重绘时使用了转换矩阵（transformation matrices），并没有实际调整Widget位置。
+- 灵活；由于我们需要自己实现FlowDelegate的`paintChildren()`方法，所以我们需要自己计算每一个widget的位置，因此，可以自定义布局策略。
+
+缺点：
+
+- 使用复杂.
+- 不能自适应子widget大小，必须通过指定父容器大小或实现TestFlowDelegate的`getSize`返回固定大小。
+
+### 层叠布局Stack、Positioned
+
+层叠布局和Web中的绝对定位、Android中的Frame布局是相似的，子widget可以根据到父容器四个角的位置来确定本身的位置。绝对定位允许子widget堆叠（按照代码中声明的顺序）。Flutter中使用Stack和Positioned来实现绝对定位，Stack允许子widget堆叠，而Positioned可以给子widget定位（根据Stack的四个角）。
+
+#### Stack
+
+```dart
+Stack({
+  this.alignment = AlignmentDirectional.topStart,
+  this.textDirection,
+  this.fit = StackFit.loose,
+  this.overflow = Overflow.clip,
+  List<Widget> children = const <Widget>[],
+})
+```
+
+- alignment：此参数决定如何去对齐没有定位（没有使用Positioned）或部分定位的子widget。所谓部分定位，在这里**特指没有在某一个轴上定位：**left、right为横轴，top、bottom为纵轴，只要包含某个轴上的一个定位属性就算在该轴上有定位。
+- textDirection：和Row、Wrap的textDirection功能一样，都用于决定alignment对齐的参考系即：textDirection的值为`TextDirection.ltr`，则alignment的`start`代表左，`end`代表右，即`从左往右`的顺序；textDirection的值为`TextDirection.rtl`，则alignment的`start`代表右，`end`代表左，即`从右往左`的顺序。
+- fit：此参数用于决定**没有定位**的子widget如何去适应Stack的大小。`StackFit.loose`表示使用子widget的大小，`StackFit.expand`表示扩伸到Stack的大小。
+- overflow：此属性决定如何显示超出Stack显示空间的子widget，值为`Overflow.clip`时，超出部分会被剪裁（隐藏），值为`Overflow.visible` 时则不会。
+
+#### Positioned
+
+```dart
+const Positioned({
+  Key key,
+  this.left, 
+  this.top,
+  this.right,
+  this.bottom,
+  this.width,
+  this.height,
+  @required Widget child,
+})
+```
+
+left、top 、right、 bottom分别代表离Stack左、上、右、底四边的距离。width和height用于指定定位元素的宽度和高度，注意，此处的width、height 和其它地方的意义稍微有点区别，此处用于配合left、top 、right、 bottom来定位widget，举个例子，在水平方向时，你只能指定left、right、width三个属性中的两个，如指定left和width后，right会自动算出(left+width)，如果同时指定三个属性则会报错，垂直方向同理。
 
