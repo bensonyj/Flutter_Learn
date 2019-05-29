@@ -745,3 +745,985 @@ const Positioned({
 
 left、top 、right、 bottom分别代表离Stack左、上、右、底四边的距离。width和height用于指定定位元素的宽度和高度，注意，此处的width、height 和其它地方的意义稍微有点区别，此处用于配合left、top 、right、 bottom来定位widget，举个例子，在水平方向时，你只能指定left、right、width三个属性中的两个，如指定left和width后，right会自动算出(left+width)，如果同时指定三个属性则会报错，垂直方向同理。
 
+## 容器类Widgets
+
+容器类Widget和布局类Widget都作用于其子Widget，不同的是：
+
+- 布局类Widget一般都需要接收一个widget数组（children），他们直接或间接继承自（或包含）MultiChildRenderObjectWidget ；而容器类Widget一般只需要接收一个子Widget（child），他们直接或间接继承自（或包含）SingleChildRenderObjectWidget。
+- 布局类Widget是按照一定的排列方式来对其子Widget进行排列；而容器类Widget一般只是包装其子Widget，对其添加一些修饰（补白或背景色等）、变换(旋转或剪裁等)、或限制(大小等)
+
+### Padding
+
+Padding可以给其子节点添加补白（填充）
+
+```dart
+Padding({
+  ...
+  EdgeInsetsGeometry padding,
+  Widget child,
+})
+```
+
+EdgeInsetsGeometry是一个抽象类，开发中，我们一般都使用EdgeInsets，它是EdgeInsetsGeometry的一个子类，定义了一些设置补白的便捷方法。
+
+#### EdgeInsets
+
+我们看看EdgeInsets提供的便捷方法：
+
+- `fromLTRB(double left, double top, double right, double bottom)`：分别指定四个方向的补白。
+- `all(double value)` : 所有方向均使用相同数值的补白。
+- `only({left, top, right ,bottom })`：可以设置具体某个方向的补白(可以同时指定多个方向)。
+- `symmetric({ vertical, horizontal })`：用于设置对称方向的补白，vertical指top和bottom，horizontal指left和right。
+
+### ConstrainedBox和SizedBox
+
+ConstrainedBox和SizedBox都是通过RenderConstrainedBox来渲染的。SizedBox只是ConstrainedBox的一个定制
+
+####ConstrainedBox
+
+ConstrainedBox用于对子widget添加额外的约束。例如，如果你想让子widget的最小高度是80像素，你可以使用`const BoxConstraints(minHeight: 80.0)`作为子widget的约束。
+
+#### BoxConstraints
+
+BoxConstraints用于设置限制条件，它的定义如下：
+
+```dart
+const BoxConstraints({
+  this.minWidth = 0.0, //最小宽度
+  this.maxWidth = double.infinity, //最大宽度
+  this.minHeight = 0.0, //最小高度
+  this.maxHeight = double.infinity //最大高度
+})
+```
+
+BoxConstraints还定义了一些便捷的构造函数，用于快速生成特定限制规则的BoxConstraints，如`BoxConstraints.tight(Size size)`，它可以生成给定大小的限制；`const BoxConstraints.expand()`可以生成一个尽可能大的用以填充另一个容器的BoxConstraints。除此之外还有一些其它的便捷函数，读者可以查看[API文档](https://docs.flutter.io/flutter/rendering/BoxConstraints-class.html)。
+
+#### SizedBox
+
+SizedBox用于给子widget指定固定的宽高，如：
+
+```dart
+SizedBox(
+  width: 80.0,
+  height: 80.0,
+  child: redBox
+)
+```
+
+实际上SizedBox只是ConstrainedBox的一个定制，上面代码等价于：
+
+```dart
+ConstrainedBox(
+  constraints: BoxConstraints.tightFor(width: 80.0,height: 80.0),
+  child: redBox, 
+)
+```
+
+而`BoxConstraints.tightFor(width: 80.0,height: 80.0)`等价于：
+
+```dart
+BoxConstraints(minHeight: 80.0,maxHeight: 80.0,minWidth: 80.0,maxWidth: 80.0)
+```
+
+#### 多重约束限制
+
+一个widget多个父层约束时，对同个约束取最大约束值。
+
+#### UnconstrainedBox
+
+UnconstrainedBox不会对子Widget产生任何限制，它允许其子Widget按照其本身大小绘制。一般情况下，我们会很少直接使用此widget，但在"去除"多重限制的时候也许会有帮助，我们看下下面的代码：
+
+```dart
+ConstrainedBox(
+    constraints: BoxConstraints(minWidth: 60.0, minHeight: 100.0),  //父
+    child: UnconstrainedBox( //“去除”父级限制
+      child: ConstrainedBox(
+        constraints: BoxConstraints(minWidth: 90.0, minHeight: 20.0),//子
+        child: redBox,
+      ),
+    )
+)
+```
+
+上面代码中，如果没有中间的UnconstrainedBox，那么根据上面所述的多重限制规则，那么最终将显示一个90×100的红色框。但是由于 UnconstrainedBox “去除”了父ConstrainedBox的限制，则最终会按照子ConstrainedBox的限制来绘制redBox，即90×20：
+
+![image-20180910105830808](https://cdn.jsdelivr.net/gh/flutterchina/flutter-in-action@1.0/docs/imgs/image-20180910105830808.png)
+
+但是，读者请注意，UnconstrainedBox对父限制的“去除”并非是真正的去除，上面例子中虽然红色区域大小是90×20，但上方仍然有80的空白空间。也就是说父限制的minHeight(100.0)仍然是生效的，只不过它不影响最终子元素的大小，但仍然还是占有相应的空间，可以认为此时的父ConstrainedBox是作用于子ConstrainedBox上，而renderBox只受子ConstrainedBox限制，这一点请读者务必注意
+
+### 装饰容器DecoratedBox
+
+DecoratedBox可以在其子widget绘制前(或后)绘制一个装饰Decoration（如背景、边框、渐变等）。DecoratedBox定义如下：
+
+```dart
+const DecoratedBox({
+  Decoration decoration,
+  DecorationPosition position = DecorationPosition.background,
+  Widget child
+})
+```
+
+- decoration：代表将要绘制的装饰，它类型为Decoration，Decoration是一个抽象类，它定义了一个接口 `createBoxPainter()`，子类的主要职责是需要通过实现它来创建一个画笔，该画笔用于绘制装饰。
+- position：此属性决定在哪里绘制Decoration，它接收DecorationPosition的枚举类型，该枚举类两个值：
+  - background：在子widget之后绘制，即背景装饰。
+  - foreground：在子widget之上绘制，即前景。
+
+#### BoxDecoration
+
+```dart
+BoxDecoration({
+  Color color, //颜色
+  DecorationImage image,//图片
+  BoxBorder border, //边框
+  BorderRadiusGeometry borderRadius, //圆角
+  List<BoxShadow> boxShadow, //阴影,可以指定多个
+  Gradient gradient, //渐变
+  BlendMode backgroundBlendMode, //背景混合模式
+  BoxShape shape = BoxShape.rectangle, //形状
+})
+```
+
+### 变换Transform
+
+Transform可以在其子Widget绘制时对其应用一个矩阵变换（transformation），Matrix4是一个4D矩阵，通过它我们可以实现各种矩阵操作。下面是一个例子：
+
+```dart
+Container(
+  color: Colors.black,
+  child: new Transform(
+    alignment: Alignment.topRight, //相对于坐标系原点的对齐方式
+    transform: new Matrix4.skewY(0.3), //沿Y轴倾斜0.3弧度
+    child: new Container(
+      padding: const EdgeInsets.all(8.0),
+      color: Colors.deepOrange,
+      child: const Text('Apartment for rent!'),
+    ),
+  ),
+);
+```
+
+#### 平移
+
+Transform.translate接收一个offset参数，可以在绘制时沿x、y轴对子widget平移指定的距离。
+
+```dart
+DecoratedBox(
+  decoration:BoxDecoration(color: Colors.red),
+  //默认原点为左上角，左移20像素，向上平移5像素  
+  child: Transform.translate(offset: Offset(-20.0, -5.0),
+    child: Text("Hello world"),
+  ),
+)
+```
+
+#### 旋转
+
+Transform.rotate可以对子widget进行旋转变换，如：
+
+```dart
+DecoratedBox(
+  decoration:BoxDecoration(color: Colors.red),
+  child: Transform.rotate(
+    //旋转90度
+    angle:math.pi/2 ,
+    child: Text("Hello world"),
+  ),
+)
+```
+
+#### 缩放
+
+Transform.scale可以对子Widget进行缩小或放大，如：
+
+```dart
+DecoratedBox(
+  decoration:BoxDecoration(color: Colors.red),
+  child: Transform.scale(
+      scale: 1.5, //放大到1.5倍
+      child: Text("Hello world")
+  )
+);
+```
+
+#### 注意
+
+- Transform的变换是应用在绘制阶段，而并不是应用在布局(layout)阶段，所以无论对子widget应用何种变化，其占用空间的大小和在屏幕上的位置都是固定不变的，因为这些是在布局阶段就确定的。下面我们具体说明：
+
+  ```dart
+   Row(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: <Widget>[
+      DecoratedBox(
+        decoration:BoxDecoration(color: Colors.red),
+        child: Transform.scale(scale: 1.5,
+            child: Text("Hello world")
+        )
+      ),
+      Text("你好", style: TextStyle(color: Colors.green, fontSize: 18.0),)
+    ],
+  )
+  ```
+
+  显示效果：
+
+  ![image-20180910164454967](https://cdn.jsdelivr.net/gh/flutterchina/flutter-in-action@1.0/docs/imgs/image-20180910164454967.png)
+
+  由于第一个Text应用变换(放大)后，其在绘制时会放大，但其占用的空间依然为红色部分，所以第二个text会紧挨着红色部分，最终就会出现文字有重合部分。
+
+- 由于矩阵变化只会作用在绘制阶段，所以在某些场景下，在UI需要变化时，可以直接通过矩阵变化来达到视觉上的UI改变，而不需要去重新触发build流程，这样会节省layout的开销，所以性能会比较好。如之前介绍的Flow widget，它内部就是用矩阵变换来更新UI，除此之外，Flutter的动画widget中也大量使用了Transform以提高性能。
+
+#### RotatedBox
+
+RotatedBox和Transform.rotate功能相似，它们都可以对子widget进行旋转变换，但是有一点不同：RotatedBox的变换是在layout阶段，会影响在子widget的位置和大小。我们将上面介绍Transform.rotate时的示例改一下：
+
+```dart
+Row(
+  mainAxisAlignment: MainAxisAlignment.center,
+  children: <Widget>[
+    DecoratedBox(
+      decoration: BoxDecoration(color: Colors.red),
+      //将Transform.rotate换成RotatedBox  
+      child: RotatedBox(
+        quarterTurns: 1, //旋转90度(1/4圈)
+        child: Text("Hello world"),
+      ),
+    ),
+    Text("你好", style: TextStyle(color: Colors.green, fontSize: 18.0),)
+  ],
+),
+```
+
+效果：
+
+![image-20180910170603964](https://cdn.jsdelivr.net/gh/flutterchina/flutter-in-action@1.0/docs/imgs/image-20180910170603964.png)
+
+由于RotatedBox是作用于layout阶段，所以widget会旋转90度（而不只是绘制的内容），decoration会作用到widget所占用的实际空间上，所以就是上图的效果。读者可以和前面Transform.rotate示例对比理解。
+
+### Container容器
+
+它本身不对应具体的RenderObject，它是DecoratedBox、ConstrainedBox、Transform、Padding、Align等widget的一个组合widget。所以我们只需通过一个Container可以实现同时需要装饰、变换、限制的场景。
+
+```dart
+Container({
+  this.alignment,
+  this.padding, //容器内补白，属于decoration的装饰范围
+  Color color, // 背景色
+  Decoration decoration, // 背景装饰
+  Decoration foregroundDecoration, //前景装饰
+  double width,//容器的宽度
+  double height, //容器的高度
+  BoxConstraints constraints, //容器大小的限制条件
+  this.margin,//容器外补白，不属于decoration的装饰范围
+  this.transform, //变换
+  this.child,
+})
+```
+
+- 容器的大小可以通过`width`、`height`属性来指定，也可以通过`constraints`来指定，如果同时存在时，`width`、`height`优先。实际上Container内部会根据`width`、`height`来生成一个`constraints`。
+- `color`和`decoration`是互斥的，实际上，当指定color时，Container内会自动创建一个decoration。
+
+#### Padding和Margin
+
+margin的补白是在容器外部，而padding的补白是在容器内部
+
+```dart
+...
+Container(
+  margin: EdgeInsets.all(20.0), //容器外补白
+  color: Colors.orange,
+  child: Text("Hello world!"),
+),
+Container(
+  padding: EdgeInsets.all(20.0), //容器内补白
+  color: Colors.orange,
+  child: Text("Hello world!"),
+),
+...
+```
+
+![image-20180911094807143](https://cdn.jsdelivr.net/gh/flutterchina/flutter-in-action@1.0/docs/imgs/image-20180911094807143.png)
+
+### Scaffold、TabBar、底部导航
+
+Material组件
+
+####Scaffold
+
+```dart
+Scaffold({
+  Key key,
+  this.appBar,	// 设置导航栏
+  this.body,		// 设置页面组件
+  this.bottomNavigationBar, 	// 设置底部导航栏
+  this.floatingActionButton,	// 悬浮按钮
+  this.floatingActionButtonLocation, //
+  this.floatingActionButtonAnimator, //
+  this.backgroundColor, // 页面背景色
+  this.bottomSheet,			//
+  this.drawer,					// Android抽屉组件
+  this.endDrawer,				// 
+})
+```
+
+
+
+#### AppBar
+
+是一个Material风格的导航栏，它可以设置标题、导航栏菜单、底部Tab等。下面我们看看AppBar的定义：
+
+```dart
+AppBar({
+  Key key,
+  this.leading, //导航栏最左侧Widget，常见为抽屉菜单按钮或返回按钮。
+  this.automaticallyImplyLeading = true, //如果leading为null，是否自动实现默认的leading按钮
+  this.title,// 页面标题
+  this.actions, // 导航栏右侧菜单
+  this.bottom, // 导航栏底部菜单，通常为Tab按钮组
+  this.elevation = 4.0, // 导航栏阴影
+  this.centerTitle, //标题是否居中 
+  this.backgroundColor,
+  ...   //其它属性见源码注释
+})
+```
+
+#### Tabbar
+
+```dart
+Tabbar({
+  Key key,
+  @required List<Widget> tabs,
+  TabController controller,
+  bool isScrollable: false,
+  Color indicatorColor,
+  double indicatorWeight: 2.0, 
+  EdgeInsetsGeometry indicatorPadding: EdgeInsets.zero, 
+  Decoration indicator, 
+  TabBarIndicatorSize indicatorSize, 
+  Color labelColor, 
+  TextStyle labelStyle, 
+  EdgeInsetsGeometry labelPadding, 
+  Color unselectedLabelColor, 
+  TextStyle unselectedLabelStyle, 
+  DragStartBehavior dragStartBehavior: DragStartBehavior.start, 
+  ValueChanged<int> onTap
+})
+```
+
+Tab Widget有三个可选参数，除了可以指定文字外，还可以指定Tab菜单图标，或者直接自定义Widget，定义如下：
+
+```dart
+Tab({
+  Key key,
+  this.text, // 菜单文本
+  this.icon, // 菜单图标
+  this.child, // 自定义Widget
+})
+```
+
+#### TabBarView
+
+```dart
+TabBarView({
+  Key key, 
+  @required List<Widget> children, 
+  TabController controller, 
+  ScrollPhysics physics, 
+  DragStartBehavior dragStartBehavior: DragStartBehavior.start 
+})
+```
+
+#### Drawer 抽屉式菜单
+
+Scaffold的`drawer`和`endDrawer`属性可以分别接受一个Widget作为页面的左、右抽屉菜单，如果开发者提供了抽屉菜单，那么当用户手指从屏幕左/右向里滑动时便可打开抽屉菜单
+
+```dart
+Drawer({
+  Key key, 
+  double elevation: 16.0, 
+  Widget child, 
+  String semanticLabel 
+})
+```
+
+#### FloatingActionButton
+
+FloatingActionButton是Material设计规范中的一种特殊Button，通常悬浮在页面的某一个位置作为某种常用动作的快捷入口，如本节示例中页面右下角的"➕"号按钮。我们可以通过Scaffold的`floatingActionButton`属性来设置一个FloatingActionButton，同时通过`floatingActionButtonLocation`属性来指定其在页面中悬浮的位置，这个比较简单，不再赘述。
+
+#### 底部Tab导航
+
+就是tabbar属性
+
+#### 导航栏中间打洞
+
+Material组件库中提供了一个BottomAppBar Widget，可以和FloatingActionButton配合实现这种"打洞"效果。源码如下：
+
+```dart
+bottomNavigationBar: BottomAppBar(
+  color: Colors.white,
+  shape: CircularNotchedRectangle(), // 底部导航栏打一个圆形的洞
+  child: Row(
+    children: [
+      IconButton(icon: Icon(Icons.home)),
+      SizedBox(), //中间位置空出
+      IconButton(icon: Icon(Icons.business)),
+    ],
+    mainAxisAlignment: MainAxisAlignment.spaceAround, //均分底部导航栏横向空间
+  ),
+)
+```
+
+可以看到，上面代码中没有控制打洞位置的属性，实际上，打洞的位置取决于FloatingActionButton的位置，上面FloatingActionButton的位置为：
+
+```dart
+floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+```
+
+BottomAppBar的`shape`属性决定洞的外形，CircularNotchedRectangle实现了一个圆形的外形，我们也可以自定义外形，比如，Flutter Gallery示例中就有一个”钻石“形状的实现
+
+## 可滚动Widgets
+
+可滚动Widget都直接或间接包含一个Scrollable widget，因此它们包括一些共同的属性，为了避免重复介绍，我们在此统一介绍一下：
+
+```dart
+Scrollable({
+  ...
+  this.axisDirection = AxisDirection.down,
+  this.controller,
+  this.physics,
+  @required this.viewportBuilder, //后面介绍
+})
+```
+
+- axisDirection：滚动方向。
+- physics：此属性接受一个ScrollPhysics对象，它决定可滚动Widget如何响应用户操作，比如用户滑动完抬起手指后，继续执行动画；或者滑动到边界时，如何显示。默认情况下，Flutter会根据具体平台分别使用不同的ScrollPhysics对象，应用不同的显示效果，如当滑动到边界时，继续拖动的话，在iOS上会出现弹性效果，而在Android上会出现微光效果。如果你想在所有平台下使用同一种效果，可以显式指定，Flutter SDK中包含了两个ScrollPhysics的子类可以直接使用：
+  - ClampingScrollPhysics：Android下微光效果。
+  - BouncingScrollPhysics：iOS下弹性效果。
+- controller：此属性接受一个ScrollController对象。ScrollController的主要作用是控制滚动位置和监听滚动事件。默认情况下，widget树中会有一个默认的PrimaryScrollController，如果子树中的可滚动widget没有显式的指定`controller`并且`primary`属性值为`true`时（默认就为`true`），可滚动widget会使用这个默认的PrimaryScrollController，这种机制带来的好处是父widget可以控制子树中可滚动widget的滚动，例如，Scaffold使用这种机制在iOS中实现了"回到顶部"的手势。我们将在本章后面“滚动控制”一节详细介绍ScrollController。
+
+### SingleChildScrollView
+
+SingleChildScrollView类似于Android中的ScrollView，它只能接收一个子Widget。定义如下：
+
+```dart
+SingleChildScrollView({
+  this.scrollDirection = Axis.vertical, //滚动方向，默认是垂直方向
+  this.reverse = false, 
+  this.padding, 
+  bool primary, 
+  this.physics, 
+  this.controller,
+  this.child,
+})
+```
+
+除了通用属性，我们重点看一下`reverse`和`primary`两个属性：
+
+- reverse：该属性API文档解释是：是否按照阅读方向相反的方向滑动，如：`scrollDirection`值为`Axis.horizontal`，如果阅读方向是从左到右(取决于语言环境，阿拉伯语就是从右到左)，reverse为`true`时，那么滑动方向就是从右往左。其实此属性本质上是决定可滚动widget的初始滚动位置是在“头”还是“尾”，取`false`时，初始滚动位置在“头”，反之则在“尾”，读者可以自己试验。
+- primary：指是否使用widget树中默认的PrimaryScrollController；当滑动方向为垂直方向（`scrollDirection`值为`Axis.vertical`）并且`controller`没有指定时，`primary`默认为`true`.
+
+需要注意的是，通常SingleChildScrollView只应在期望内容适合屏幕的情况下使用，它无法使用基于Sliver的延迟实例化，如果预计视口通常包含超出屏幕尺寸的内容，那么SingleChildScrollView将会非常昂贵。
+
+### ListView
+
+```dart
+ListView({
+  ...  
+  //可滚动widget公共参数
+  Axis scrollDirection = Axis.vertical,
+  bool reverse = false,
+  ScrollController controller,
+  bool primary,
+  ScrollPhysics physics,
+  EdgeInsetsGeometry padding,
+
+  //ListView各个构造函数的共同参数  
+  double itemExtent,
+  bool shrinkWrap = false,
+  bool addAutomaticKeepAlives = true,
+  bool addRepaintBoundaries = true,
+  double cacheExtent,
+
+  //子widget列表
+  List<Widget> children = const <Widget>[],
+})
+```
+
+上面参数分为两组：第一组是可滚动widget公共参数，前面已经介绍过，不再赘述；第二组是ListView各个构造函数（ListView有多个构造函数）的共同参数，我们重点来看看这些参数，：
+
+- itemExtent：该参数如果不为null，则会强制children的"长度"为itemExtent的值；这里的"长度"是指滚动方向上子widget的长度，即如果滚动方向是垂直方向，则itemExtent代表子widget的高度，如果滚动方向为水平方向，则itemExtent代表子widget的长度。在ListView中，指定itemExtent比让子widget自己决定自身长度会更高效，这是因为指定itemExtent后，滚动系统可以提前知道列表的长度，而不是总是动态去计算，尤其是在滚动位置频繁变化时（滚动系统需要频繁去计算列表高度）。
+- shrinkWrap：该属性表示是否根据子widget的总长度来设置ListView的长度，默认值为`false` 。默认情况下，ListView的会在滚动方向尽可能多的占用空间。当ListView在一个无边界(滚动方向上)的容器中时，shrinkWrap必须为`true`。
+- addAutomaticKeepAlives：该属性表示是否将列表项（子widget）包裹在AutomaticKeepAlive widget中；典型地，在一个懒加载列表中，如果将列表项包裹在AutomaticKeepAlive中，在该列表项滑出视口时该列表项不会被GC，它会使用KeepAliveNotification来保存其状态。如果列表项自己维护其KeepAlive状态，那么此参数必须置为`false`。
+- addRepaintBoundaries：该属性表示是否将列表项（子widget）包裹在RepaintBoundary中。当可滚动widget滚动时，将列表项包裹在RepaintBoundary中可以避免列表项重绘，但是当列表项重绘的开销非常小（如一个颜色块，或者一个较短的文本）时，不添加RepaintBoundary反而会更高效。和addAutomaticKeepAlive一样，如果列表项自己维护其KeepAlive状态，那么此参数必须置为`false`。
+
+#### ListView.builder
+
+`ListView.builder`适合列表项比较多（或者无限）的情况，因为只有当子Widget真正显示的时候才会被创建。下面看一下ListView.builder的核心参数列表：
+
+```dart
+ListView.builder({
+  // ListView公共参数已省略  
+  ...
+  @required IndexedWidgetBuilder itemBuilder,
+  int itemCount,
+  ...
+})
+```
+
+- itemBuilder：它是列表项的构建器，类型为IndexedWidgetBuilder，返回值为一个widget。当列表滚动到具体的index位置时，会调用该构建器构建列表项。
+- itemCount：列表项的数量，如果为null，则为无限列表。
+
+#### ListView.separated
+
+`ListView.separated`可以生成列表项之间的分割器，它除了比`ListView.builder`多了一个`separatorBuilder`参数，该参数是一个分割器生成器
+
+```dart
+Widget build(BuildContext context) {
+    //下划线widget预定义以供复用。  
+    Widget divider1=Divider(color: Colors.blue,);
+    Widget divider2=Divider(color: Colors.green);
+    return ListView.separated(
+        itemCount: 100,
+        //列表项构造器
+        itemBuilder: (BuildContext context, int index) {
+          return ListTile(title: Text("$index"));
+        },
+        //分割器构造器
+        separatorBuilder: (BuildContext context, int index) {
+          return index%2==0?divider1:divider2;
+        },
+    );
+  }
+```
+
+#### 添加固定表头
+
+可以使用Expanded自动拉伸组件大小的Widget，我们也说过Column是继承自Flex的，所以我们可以直接使用Column+Expanded来实现，代码如下：
+
+```dart
+@override
+Widget build(BuildContext context) {
+  return Column(children: <Widget>[
+    ListTile(title:Text("商品列表")),
+    Expanded(
+      child: ListView.builder(itemBuilder: (BuildContext context, int index) {
+        return ListTile(title: Text("$index"));
+      }),
+    ),
+  ]);
+}
+```
+
+### GridView
+
+GridView可以构建一个二维网格列表，其默认构造函数定义如下：
+
+```dart
+GridView({
+  Axis scrollDirection = Axis.vertical,
+  bool reverse = false,
+  ScrollController controller,
+  bool primary,
+  ScrollPhysics physics,
+  bool shrinkWrap = false,
+  EdgeInsetsGeometry padding,
+  @required SliverGridDelegate gridDelegate, //控制子widget layout的委托
+  bool addAutomaticKeepAlives = true,
+  bool addRepaintBoundaries = true,
+  double cacheExtent,
+  List<Widget> children = const <Widget>[],
+})
+```
+
+####SliverGridDelegateWithFixedCrossAxisCount
+
+该子类实现了一个横轴为固定数量子元素的layout算法，其构造函数为：
+
+```dart
+SliverGridDelegateWithFixedCrossAxisCount({
+  @required double crossAxisCount, 
+  double mainAxisSpacing = 0.0,
+  double crossAxisSpacing = 0.0,
+  double childAspectRatio = 1.0,
+})
+```
+
+- crossAxisCount：横轴子元素的数量。此属性值确定后子元素在横轴的长度就确定了,即ViewPort横轴长度/crossAxisCount。
+- mainAxisSpacing：主轴方向的间距。
+- crossAxisSpacing：横轴方向子元素的间距。
+- childAspectRatio：子元素在横轴长度和主轴长度的比例。由于crossAxisCount指定后子元素横轴长度就确定了，然后通过此参数值就可以确定子元素在主轴的长度。
+
+```dart
+GridView(
+  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+      crossAxisCount: 3, //横轴三个子widget
+      childAspectRatio: 1.0 //宽高比为1时，子widget
+  ),
+  children:<Widget>[
+    Icon(Icons.ac_unit),
+    Icon(Icons.airport_shuttle),
+    Icon(Icons.all_inclusive),
+    Icon(Icons.beach_access),
+    Icon(Icons.cake),
+    Icon(Icons.free_breakfast)
+  ]
+);
+```
+
+#### GridView.count
+
+GridView.count构造函数内部使用了SliverGridDelegateWithFixedCrossAxisCount，我们通过它可以快速的创建横轴固定数量子元素的GridView
+
+```dart
+GridView.count( 
+  crossAxisCount: 3,
+  childAspectRatio: 1.0,
+  children: <Widget>[
+    Icon(Icons.ac_unit),
+    Icon(Icons.airport_shuttle),
+    Icon(Icons.all_inclusive),
+    Icon(Icons.beach_access),
+    Icon(Icons.cake),
+    Icon(Icons.free_breakfast),
+  ],
+);
+```
+
+#### SliverGridDelegateWithMaxCrossAxisExtent
+
+该子类实现了一个横轴子元素为固定最大长度的layout算法，其构造函数为：
+
+```dart
+SliverGridDelegateWithMaxCrossAxisExtent({
+  double maxCrossAxisExtent,
+  double mainAxisSpacing = 0.0,
+  double crossAxisSpacing = 0.0,
+  double childAspectRatio = 1.0,
+})
+```
+
+maxCrossAxisExtent为子元素在横轴上的最大长度，之所以是“最大”长度，是**因为横轴方向每个子元素的长度仍然是等分的**，举个例子，如果ViewPort的横轴长度是450，那么当maxCrossAxisExtent的值在区间[450/4，450/3)内的话，子元素最终实际长度都为112.5，而`childAspectRatio`所指的子元素横轴和主轴的长度比为**最终的长度比**。其它参数和SliverGridDelegateWithFixedCrossAxisCount相同。
+
+```dart
+GridView(
+  padding: EdgeInsets.zero,
+  gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+      maxCrossAxisExtent: 120.0,
+      childAspectRatio: 2.0 //宽高比为2
+  ),
+  children: <Widget>[
+    Icon(Icons.ac_unit),
+    Icon(Icons.airport_shuttle),
+    Icon(Icons.all_inclusive),
+    Icon(Icons.beach_access),
+    Icon(Icons.cake),
+    Icon(Icons.free_breakfast),
+  ],
+);
+```
+
+#### GridView.extent
+
+GridView.extent构造函数内部使用了SliverGridDelegateWithMaxCrossAxisExtent，我们通过它可以快速的创建纵轴子元素为固定最大长度的的GridView，上面的示例代码等价于：
+
+```dart
+GridView.extent(
+   maxCrossAxisExtent: 120.0,
+   childAspectRatio: 2.0,
+   children: <Widget>[
+     Icon(Icons.ac_unit),
+     Icon(Icons.airport_shuttle),
+     Icon(Icons.all_inclusive),
+     Icon(Icons.beach_access),
+     Icon(Icons.cake),
+     Icon(Icons.free_breakfast),
+   ],
+ );
+```
+
+#### GridView.builder
+
+上面我们介绍的GridView都需要一个Widget数组作为其子元素，这些方式都会提前将所有子widget都构建好，所以只适用于子Widget数量比较少时，当子widget比较多时，我们可以通过`GridView.builder`来动态创建子Widget。`GridView.builder` 必须指定的参数有两个：
+
+```dart
+GridView.builder(
+ ...
+ @required SliverGridDelegate gridDelegate, 
+ @required IndexedWidgetBuilder itemBuilder,
+)
+```
+
+其中itemBuilder为子widget构建器。
+
+### CustomScrollView
+
+CustomScrollView是可以使用sliver来自定义滚动模型（效果）的widget
+
+#### Sliver
+
+可滚动widget，如ListView、GridView等都有对应的Sliver实现如SliverList、SliverGrid等。对于大多数Sliver来说，它们和可滚动Widget最主要的区别是**Sliver不会包含Scrollable Widget，也就是说Sliver本身不包含滚动交互模型** ，正因如此，CustomScrollView才可以将多个Sliver"粘"在一起，这些Sliver共用CustomScrollView的Scrollable，最终实现统一的滑动效果。
+
+### 滚动监听及控制ScrollController
+
+#### ScrollController
+
+```dart
+ScrollController({
+  double initialScrollOffset = 0.0, //初始滚动位置
+  this.keepScrollOffset = true,//是否保存滚动位置
+  ...
+})
+```
+
+- `offset`：可滚动Widget当前滚动的位置。
+- `jumpTo(double offset)`、`animateTo(double offset,...)`：这两个方法用于跳转到指定的位置，它们不同之处在于，后者在跳转时会执行一个动画，而前者不会。
+
+#### 滚动监听
+
+ScrollController间接继承自Listenable，我们可以根据ScrollController来监听滚动事件。如：
+
+```dart
+controller.addListener(()=>print(controller.offset))
+```
+
+#### 滚动位置恢复
+
+[参考](https://book.flutterchina.club/chapter6/scroll_controller.html)
+
+#### ScrollPosition
+
+一个ScrollController可以同时被多个Scrollable Widget使用，ScrollController会为每一个Scrollable Widget创建一个ScrollPosition对象，这些ScrollPosition保存在ScrollController的`positions`属性中（List）。ScrollPosition是真正保存滑动位置信息的对象，`offset`只是一个便捷属性：
+
+```dart
+double get offset => position.pixels;
+```
+
+ScrollPosition有两个常用方法：`animateTo()` 和 `jumpTo()`，它们是真正来控制跳转滚动位置的方法，ScrollController的这两个同名方法，内部最终都会调用ScrollPosition的。
+
+#### ScrollController控制原理
+
+```dart
+ScrollPosition createScrollPosition(
+    ScrollPhysics physics,
+    ScrollContext context,
+    ScrollPosition oldPosition);
+void attach(ScrollPosition position) ;
+void detach(ScrollPosition position) ;
+```
+
+当ScrollController和Scrollable Widget关联时，Scrollable Widget首先会调用ScrollController的`createScrollPosition()`方法来创建一个ScrollPosition来存储滚动位置信息，接着，Scrollable Widget会调用`attach()`方法，将创建的ScrollPosition添加到ScrollController的`positions`属性中，这一步称为“注册位置”，只有注册后`animateTo()` 和 `jumpTo()`才可以被调用。当Scrollable Widget销毁时，会调用ScrollController的`detach()`方法，将其ScrollPosition对象从ScrollController的`positions`属性中移除，这一步称为“注销位置”，注销后`animateTo()` 和 `jumpTo()` 将不能再被调用。
+
+需要注意的是，ScrollController的`animateTo()` 和 `jumpTo()`内部会调用所有ScrollPosition的`animateTo()` 和 `jumpTo()`，以实现所有和该ScrollController关联的Scrollable Widget都滚动到指定的位置。
+
+### NotificationListener滚动监听
+
+Flutter Widget树中子Widget可以通过发送通知（Notification）与父(包括祖先)Widget通信。父Widget可以通过NotificationListener Widget来监听自己关注的通知，这种通信方式类似于Web开发中浏览器的事件冒泡，我们在Flutter中沿用“冒泡”这个术语。Scrollable Widget在滚动时会发送ScrollNotification类型的通知，ScrollBar正是通过监听滚动通知来实现的。通过NotificationListener监听滚动事件和通过ScrollController有两个主要的不同：
+
+1. 通过NotificationListener可以在从Scrollable Widget到Widget树根之间任意位置都能监听。而ScrollController只能和具体的Scrollable Widget关联后才可以。
+2. 收到滚动事件后获得的信息不同；NotificationListener在收到滚动事件时，通知中会携带当前滚动位置和ViewPort的一些信息，而ScrollController只能获取当前滚动位置。
+
+NotificationListener是一个Widget，模板参数T是想监听的通知类型，如果省略，则所有类型通知都会被监听，如果指定特定类型，则只有该类型的通知会被监听。NotificationListener需要一个onNotification回调函数，用于实现监听处理逻辑，该回调可以返回一个布尔值，代表是否阻止该事件继续向上冒泡，如果为`true`时，则冒泡终止，事件停止向上传播，如果不返回或者返回值为`false` 时，则冒泡继续
+
+## 功能型Widgets
+
+### WillPopScope 导航返回拦截
+
+为了避免用户误触返回按钮而导致APP退出，在很多APP中都拦截了用户点击返回键的按钮，当用户在某一个时间段内点击两次时，才会认为用户是要退出（而非误触）。Flutter中可以通过WillPopScope来实现返回按钮拦截，我们看看WillPopScope的默认构造函数：
+
+```dart
+const WillPopScope({
+  ...
+  @required WillPopCallback onWillPop,
+  @required Widget child
+})
+```
+
+onWillPop是一个回调函数，当用户点击返回按钮时调用（包括导航返回按钮及Android物理返回按钮），该回调需要返回一个Future对象，如果返回的Future最终值为`false`时，则当前路由不出栈(不会返回)，最终值为`true`时，当前路由出栈退出。我们需要提供这个回调来决定是否退出。
+
+### InheritedWidget 数据共享
+
+可以高效的将数据在Widget树中向下传递、共享，这在一些需要在Widget树中共享数据的场景中非常方便，如Flutter中，正是通过InheritedWidget来共享应用主题(Theme)和Locale(当前语言环境)信息的。
+
+#### didChangeDependencies
+
+一般来说，子widget很少会重写此方法，因为在依赖改变后framework也都会调用`build()`方法。但是，如果你需要在依赖改变后执行一些昂贵的操作，比如网络请求，这时最好的方式就是在此方法中执行，这样可以避免每次`build()`都执行这些昂贵操作。
+
+### Theme 主题
+
+Theme Widget可以为Material APP定义主题数据（ThemeData），Material组件库里很多Widget都使用了主题数据，如导航栏颜色、标题字体、Icon样式等。Theme内会使用InheritedWidget来为其子树Widget共享样式数据。
+
+#### ThemeData
+
+ThemeData是Material Design Widget库的主题数据，Material库的Widget需要遵守相应的设计规范，而这些规范可自定义部分都定义在ThemeData，所以我们可以通过ThemeData来自定义应用主题。我们可以通过`Theme.of`方法来获取当前的ThemeData。
+
+```dart
+ThemeData({
+  Brightness brightness, //深色还是浅色
+  MaterialColor primarySwatch, //主题颜色样本，见下面介绍
+  Color primaryColor, //主色，决定导航栏颜色
+  Color accentColor, //次级色，决定大多数Widget的颜色，如进度条、开关等。
+  Color cardColor, //卡片颜色
+  Color dividerColor, //分割线颜色
+  ButtonThemeData buttonTheme, //按钮主题
+  Color cursorColor, //输入框光标颜色
+  Color dialogBackgroundColor,//对话框背景颜色
+  String fontFamily, //文字字体
+  TextTheme textTheme,// 字体主题，包括标题、body等文字样式
+  IconThemeData iconTheme, // Icon的默认样式
+  TargetPlatform platform, //指定平台，应用特定平台控件风格
+  ...
+})
+```
+
+上面只是ThemeData的一小部分属性，完整列表读者可以查看SDK定义。上面属性中需要说明的是`primarySwatch`，它是主题颜色的一个"样本"，通过这个样本可以在一些条件下生成一些其它的属性，例如，如果没有指定`primaryColor`，并且当前主题不是深色主题，那么`primaryColor`就会默认为`primarySwatch`指定的颜色，还有一些相似的属性如`accentColor` 、`indicatorColor`等也会受`primarySwatch`影响。
+
+## 事件处理与通知
+
+Flutter中的手势系统有两个独立的层。第一层为原始指针(pointer)事件，它描述了屏幕上指针（例如，触摸、鼠标和触控笔）的位置和移动。 第二层为手势，描述由一个或多个指针移动组成的语义动作，如拖动、缩放、双击等
+
+### 原始指针事件处理
+
+当指针按下时，Flutter会对应用程序执行**命中测试(Hit Test)**，以确定指针与屏幕接触的位置存在哪些widget， 指针按下事件（以及该指针的后续事件）然后被分发到由命中测试发现的最内部的widget，然后从那里开始，事件会在widget树中向上冒泡，这些事件会从最内部的widget被分发到widget根的路径上的所有Widget，这和Web开发中浏览器的**事件冒泡**机制相似， 但是Flutter中没有机制取消或停止冒泡过程，而浏览器的冒泡是可以停止的。注意，只有通过命中测试的Widget才能触发事件。
+
+Flutter中可以使用Listener widget来监听原始触摸事件，它也是一个功能性widget。
+
+```dart
+Listener({
+  Key key,
+  this.onPointerDown, //手指按下回调
+  this.onPointerMove, //手指移动回调
+  this.onPointerUp,//手指抬起回调
+  this.onPointerCancel,//触摸事件取消回调
+  this.behavior = HitTestBehavior.deferToChild, //在命中测试期间如何表现
+  Widget child
+})
+```
+
+具体[参考](https://book.flutterchina.club/chapter8/listener.html)
+
+### 手势识别GestureDetector
+
+#### 点击、双击、长按
+
+```dart
+GestureDetector(
+        child: Container(
+          alignment: Alignment.center,
+          color: Colors.blue,
+          width: 200.0, 
+          height: 100.0,
+          child: Text(_operation,
+            style: TextStyle(color: Colors.white),
+          ),
+        ),
+        onTap: () => updateText("Tap"),//点击
+        onDoubleTap: () => updateText("DoubleTap"), //双击
+        onLongPress: () => updateText("LongPress"), //长按
+      ),
+    );
+```
+
+**注意**： 当同时监听`onTap`和`onDoubleTap`事件时，当用户触发tap事件时，会有200毫秒左右的延时，这是因为当用户点击完之后很可能会再次点击以触发双击事件，所以GestureDetector会等一断时间来确定是否为双击事件。如果用户只监听了`onTap`（没有监听`onDoubleTap`）事件时，则没有延时。
+
+#### 拖动、滑动
+
+GestureDetector对于拖动和滑动事件是没有区分的，他们本质上是一样的
+
+```dart
+GestureDetector(
+            child: CircleAvatar(child: Text("A")),
+            //手指按下时会触发此回调
+            onPanDown: (DragDownDetails e) {
+              //打印手指按下的位置(相对于屏幕)
+              print("用户手指按下：${e.globalPosition}");
+            },
+            //手指滑动时会触发此回调
+            onPanUpdate: (DragUpdateDetails e) {
+              //用户手指滑动时，更新偏移，重新构建
+              setState(() {
+                _left += e.delta.dx;
+                _top += e.delta.dy;
+              });
+            },
+            onPanEnd: (DragEndDetails e){
+              //打印滑动结束时在x、y轴上的速度
+              print(e.velocity);
+            },
+          ),
+```
+
+- `DragDownDetails.globalPosition`：当用户按下时，此属性为用户按下的位置相对于**屏幕**(而非父widget)原点(左上角)的偏移。
+- `DragUpdateDetails.delta`：当用户在屏幕上滑动时，会触发多次Update事件，`delta`指一次Update事件的滑动的偏移量。
+- `DragEndDetails.velocity`：该属性代表用户抬起手指时的滑动速度(包含x、y两个轴的），示例中并没有处理手指抬起时的速度，常见的效果是根据用户抬起手指时的速度做一个减速动画。
+
+#### 单一方向拖动
+
+在很多场景，我们只需要沿一个方向来拖动，如一个垂直方向的列表，GestureDetector可以只识别特定方向的手势事件
+
+```dart
+GestureDetector(
+            child: CircleAvatar(child: Text("A")),
+            //垂直方向拖动事件
+            onVerticalDragUpdate: (DragUpdateDetails details) {
+              setState(() {
+                _top += details.delta.dy;
+              });
+            }
+          ),
+```
+
+#### 缩放
+
+```dart
+GestureDetector(
+        //指定宽度，高度自适应
+        child: Image.asset("./images/sea.png", width: _width),
+        onScaleUpdate: (ScaleUpdateDetails details) {
+          setState(() {
+            //缩放倍数在0.8到10倍之间
+            _width=200*details.scale.clamp(.8, 10.0);
+          });
+```
+
+#### GestureRecognizer
+
+GestureDetector内部是使用一个或多个GestureRecognizer来识别各种手势的，而GestureRecognizer的作用就是通过Listener来将原始指针事件转换为语义手势，GestureDetector直接可以接收一个子Widget。GestureRecognizer是一个抽象类，一种手势的识别器对应一个GestureRecognizer的子类，Flutter实现了丰富的手势识别器，我们可以直接使用。
+
+####手势竞争与冲突
+
+##### 竞争
+
+Flutter中的手势识别引入了一个Arena的概念，Arena直译为“竞技场”的意思，每一个手势识别器（GestureRecognizer）都是一个“竞争者”（GestureArenaMember），当发生滑动事件时，他们都要在“竞技场”去竞争本次事件的处理权，而最终只有一个“竞争者”会胜出(win)
+
+##### 手势冲突
+
+由于手势竞争最终只有一个胜出者，所以，当有多个手势识别器时，可能会产生冲突。假设有一个widget，它可以左右拖动，现在我们也想检测在它上面手指按下和抬起的事件
+
+通过Listener监听原始指针事件就行
+
+手势冲突只是手势级别的，而手势是对原始指针的语义化的识别，所以在遇到复杂的冲突场景时，都可以通过Listener直接识别原始指针事件来解决冲突。
+
+###全局事件总线 -  单例
+
+事件总线通常实现了订阅者模式，订阅者模式包含发布者和订阅者两种角色，可以通过事件总线来触发事件和监听事件
+
+事件总线通常用于Widget之间状态共享，但关于Widget之间状态共享也有一些专门的Package如redux，这和web框架Vue/React是一致的
+
+### 通知Notification
+
+Notification是Flutter中一个重要的机制，在Widget树中，每一个节点都可以分发通知，通知会沿着当前节点（context）向上传递，所有父节点都可以通过NotificationListener来监听通知，Flutter中称这种通知由子向父的传递为“通知冒泡”（Notification Bubbling），这个和用户触摸事件冒泡是相似的，但有一点不同：通知冒泡可以中止，但用户触摸事件不行。
+
+#### 自定义通知
+
+1. 定义一个通知类，要继承自Notification类；
+
+   ```dart
+   class MyNotification extends Notification {
+     MyNotification(this.msg);
+     final String msg;
+   }
+   ```
+
+2. 分发通知。
+
+   Notification有一个`dispatch(context)`方法，它是用于分发通知的，我们说过context实际上就是操作Element的一个接口，它与Element树上的节点是对应的，通知会从context对应的Element节点向上冒泡。
+
