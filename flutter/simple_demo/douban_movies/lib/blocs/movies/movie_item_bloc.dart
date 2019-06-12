@@ -1,10 +1,11 @@
+import 'package:douban_movies/routes/router.dart';
 import 'package:flutter/material.dart';
 import 'package:rxdart/rxdart.dart' show BehaviorSubject;
 import 'package:douban_movies/models/movie.dart';
 import 'package:douban_movies/blocs/bloc_base.dart';
 import 'package:rxdart/subjects.dart';
-// import 'package:douban_movies/routes/route.dart';
-// import 'package:douban_movies/pages/movie.dart';
+import 'package:douban_movies/routes/routes.dart';
+import 'package:douban_movies/pages/movie.dart';
 
 class FavoriteNotification extends Notification {
   final bool isFavorite;
@@ -41,6 +42,9 @@ class MovieItemBloc implements BlocBase {
   }
 
   onTap(BuildContext context) {
-    // Navigator.pop(context)
+    Navigator.push(context, MaterialPageRoute(builder: (context) {
+      MoviePage moviePage = Router.getWidget('/movie/${_movie.value.id}', context, params: {'movie': _movie.value});
+      return moviePage;
+    }));
   }
 }

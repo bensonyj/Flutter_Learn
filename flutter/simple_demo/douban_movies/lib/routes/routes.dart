@@ -13,11 +13,10 @@ class Routes {
     });
 
     Router.register(detail, (BuildContext context, Map urlParams, {Map params}) {
-      // return MoviePage(
-      //   movieID: urlParams['id'],
-      //   movie:
-      //       params != null && params['movie'] != null ? params['movie'] : null,
-      // );
+      return MoviePage(
+        movieID: urlParams['id'],
+        movie:params != null && params['movie'] != null ? params['movie'] : null,
+      );
     });
   }
 }
